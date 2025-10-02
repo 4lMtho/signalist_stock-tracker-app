@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import InputField from '@/components/forms/InputField';
 import FooterLink from '@/components/forms/FooterLink';
 import {signInWithEmail, signUpWithEmail} from "@/lib/actions/auth.actions";
-import {toast} from "sonner";
-import {signInEmail} from "better-auth/api";
+/*import {toast} from "sonner";
+import {signInEmail} from "better-auth/api";*/
 import {useRouter} from "next/navigation";
+import {toast} from "sonner";
 
 const SignIn = () => {
     const router = useRouter()
@@ -30,7 +31,7 @@ const SignIn = () => {
         } catch (e) {
             console.error(e);
             toast.error('Sign in failed', {
-                description: e instanceof Error ? e.message : 'Failed to sign in.'
+                description: e instanceof Error ? e.message : 'Failed to sig in.'
             })
         }
     }
@@ -43,7 +44,7 @@ const SignIn = () => {
                 <InputField
                     name="email"
                     label="Email"
-                    placeholder="contact@jsmastery.com"
+                    placeholder="johndoe@gmail.com"
                     register={register}
                     error={errors.email}
                     validation={{ required: 'Email is required', pattern: /^\w+@\w+\.\w+$/ }}
