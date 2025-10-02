@@ -68,22 +68,27 @@ export const sendDailyNewsSummary = inngest.createFunction(
         // Step #2: For each user, get watchlist symbols -> fetch news (fallback to general)
         const results = await step.run('fetch-user-news', async () => {
             const perUser: Array<{ user: UserForNewsEmail; articles: MarketNewsArticle[] }> = [];
-            for (const user of users as UserForNewsEmail[]) {
-                try {
-                    const symbols = await getWatchlistSymbolsByEmail(user.email);
-                    let articles = await getNews(symbols);
-                    // Enforce max 6 articles per user
-                    articles = (articles || []).slice(0, 6);
-                    // If still empty, fallback to general
-                    if (!articles || articles.length === 0) {
-                        articles = await getNews();
+            // Process users with concurrency limit
+            const BATCH_SIZE = 5;
+            for (let i = 0; i < users.length; i += BATCH_SIZE) {
+                const batch = users.slice(i, i + BATCH_SIZE) as UserForNewsEmail[];
+                await Promise.all(batch.map(async (user) => {
+                    try {
+                        const symbols = await getWatchlistSymbolsByEmail(user.email);
+                        let articles = await getNews(symbols);
+                        // Enforce max 6 articles per user
                         articles = (articles || []).slice(0, 6);
+                        // If still empty, fallback to general
+                        if (!articles || articles.length === 0) {
+                            articles = await getNews();
+                            articles = (articles || []).slice(0, 6);
+                        }
+                        perUser.push({ user, articles });
+                    } catch (e) {
+                        console.error('daily-news: error preparing user news', user.email, e);
+                        perUser.push({ user, articles: [] });
                     }
-                    perUser.push({ user, articles });
-                } catch (e) {
-                    console.error('daily-news: error preparing user news', user.email, e);
-                    perUser.push({ user, articles: [] });
-                }
+                }));
             }
             return perUser;
         });
