@@ -40,5 +40,10 @@ export const sendNewsSummaryEmail = async (
         html: htmlTemplate,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Failed to send news summary email to:', email, error);
+        throw error;
+    }
 };
